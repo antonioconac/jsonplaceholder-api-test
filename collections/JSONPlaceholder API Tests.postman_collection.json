@@ -1,0 +1,1626 @@
+{
+	"info": {
+		"_postman_id": "82d93377-c65e-4139-bdd5-ffd70cbb6ce8",
+		"name": "JSONPlaceholder API Tests",
+		"description": "Test Suite for testing JSONPlaceHolder API\n\n### **Notes about JSONPlaceholder**\n\n- Responses are **mocked** (no persistence)\n    \n- Invalid input often returns **200 {}** instead of 4xx errors\n    \n- Delete requests do not actually remove the resource\n    \n- These tests are written as **real API expectations**, not JSONPlaceholder limitations",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "49361290",
+		"_collection_link": "https://conacheantonio13-6730295.postman.co/workspace/api-test-project~effafea6-3528-4618-9139-0aa8ee790be8/collection/49361290-82d93377-c65e-4139-bdd5-ffd70cbb6ce8?action=share&source=collection_link&creator=49361290"
+	},
+	"item": [
+		{
+			"name": "Posts",
+			"item": [
+				{
+					"name": "01 - Positive Tests",
+					"item": [
+						{
+							"name": "GET - List posts",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// 1. Basic body structure\r",
+											"pm.test(\"Response body is an array of posts\", function(){\r",
+											"    const data = pm.response.json();\r",
+											"    pm.expect(data).to.be.an(\"array\");\r",
+											"    data.forEach((post, index) => {\r",
+											"        pm.expect(post, \"Post at index ${index}\").to.be.an(\"object\");\r",
+											"        pm.expect(post).to.have.property(\"userId\");\r",
+											"        pm.expect(post).to.have.property(\"id\");\r",
+											"        pm.expect(post).to.have.property(\"title\");\r",
+											"        pm.expect(post).to.have.property(\"body\");\r",
+											"\r",
+											"        pm.expect(post.userId, \"userId should be a number\").to.be.a(\"number\");\r",
+											"        pm.expect(post.id, \"id should be a number\").to.be.a(\"number\");\r",
+											"        pm.expect(post.title, \"title should be a string\").to.be.a(\"string\");\r",
+											"        pm.expect(post.body, \"body should be a string\").to.be.a(\"string\");\r",
+											"    });\r",
+											"});\r",
+											"\r",
+											"// 2. Check there are some posts (not an empty array)\r",
+											"pm.test(\"There is at least one post\", function(){\r",
+											"    const data = pm.response.json();\r",
+											"    pm.expect(data.length).to.be.above(0);\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/posts",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"posts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Create post",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const res = pm.response;\r",
+											"let jsonData = {};\r",
+											"try {\r",
+											"    jsonData = res.json();\r",
+											"} catch (e) {\r",
+											"    jsonData = null;\r",
+											"}\r",
+											"\r",
+											"// 1. Validate body is valid JSON (if applicable)\r",
+											"pm.test(\"Body is valid JSON (if provided)\", function() {\r",
+											"    if (res.text()) {\r",
+											"        pm.expect(jsonData, \"Response is not valid JSON\").to.be.an(\"object\");\r",
+											"    }\r",
+											"});\r",
+											"\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "applcation/json",
+										"description": "Header that communicates the format of the file transmitted",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"title\": \"Test post from Postman\",\r\n    \"body\": \"This is a test post body\",\r\n    \"userId\": 1\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/posts",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"posts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET - List post by unique Id",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// 1. Ensure postId exists and is numeric\r",
+											"pm.test(\"postId variable is defined and numeric\", function() {\r",
+											"    const id = pm.variables.get(\"postId\");\r",
+											"    pm.expect(id).to.match(/^\\d+$/);\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const res = pm.response;\r",
+											"let jsonData;\r",
+											"\r",
+											"//Try to parse JSON\r",
+											"try {\r",
+											"    jsonData = res.json();\r",
+											"} catch(e) {\r",
+											"    jsonData = null;\r",
+											"}\r",
+											"\r",
+											"// 1. Body is valid JSON\r",
+											"pm.test(\"Valid JSON Object\", function() {\r",
+											"    pm.expect(jsonData).to.be.an(\"object\");\r",
+											"});\r",
+											"\r",
+											"// 2. Object contains expected properties\r",
+											"pm.test(\"Post contains required fields\", function() {\r",
+											"    pm.expect(jsonData).to.have.property(\"userId\");\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    pm.expect(jsonData).to.have.property(\"title\");\r",
+											"    pm.expect(jsonData).to.have.property(\"body\");\r",
+											"});\r",
+											"\r",
+											"// 3. Returned ID matches \"postId\" variable\r",
+											"pm.test(\"Returned ID matched postId\", function() {\r",
+											"    pm.expect(jsonData.id).to.eql(Number(pm.variables.get(\"postId\")));\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/posts/{{postId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"posts",
+										"{{postId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PUT - Update post",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// 1. Ensure postId exists and is numeric\r",
+											"pm.test(\"postId variable is defined and numeric\", function() {\r",
+											"    const id = pm.variables.get(\"postId\");\r",
+											"    pm.expect(id).to.match(/^\\d+$/);\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const res = pm.response;\r",
+											"let jsonData;\r",
+											"\r",
+											"//Try parsing the JSON\r",
+											"try {\r",
+											"    jsonData = res.json()\r",
+											"} catch(e) {\r",
+											"    jsonData = null;\r",
+											"}\r",
+											"\r",
+											"// 1. Response is a valid object\r",
+											"pm.test(\"Response is a JSON object\", function() {\r",
+											"    pm.expect(jsonData).to.be.an(\"object\");\r",
+											"});\r",
+											"\r",
+											"// 2. Response has expected fields\r",
+											"pm.test(\"Updated post has required fields\", function() {\r",
+											"    pm.expect(jsonData).to.have.property(\"userId\");\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    pm.expect(jsonData).to.have.property(\"title\");\r",
+											"    pm.expect(jsonData).to.have.property(\"body\");\r",
+											"});\r",
+											"\r",
+											"// 3. ID in response matches postId variable\r",
+											"pm.test(\"Response id matches postId\", function() {\r",
+											"    const expectedId = Number(pm.variables.get(\"postId\"));\r",
+											"    pm.expect(jsonData.id).to.eql(expectedId);\r",
+											"});\r",
+											"\r",
+											"// 4. Response matches what we sent\r",
+											"pm.test(\"Response body matches send data (title/body/userId)\", function() {\r",
+											"    const reqBodyRaw = pm.request.body.raw;\r",
+											"    let reqBody = {};\r",
+											"\r",
+											"    try {\r",
+											"        reqBody = JSON.parse(reqBodyRaw);\r",
+											"    } catch (e) {\r",
+											"        console.warn(\"Could not parse request body as JSON\", e);\r",
+											"    }\r",
+											"\r",
+											"    pm.expect(jsonData.userId).to.eql(reqBody.userId);\r",
+											"    pm.expect(jsonData.title).to.eql(reqBody.title);\r",
+											"    pm.expect(jsonData.body).to.eql(reqBody.body);\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"id\": {{postId}},\r\n    \"userId\": 5,\r\n    \"title\": \"Updated post title from Postman\",\r\n    \"body\": \"This is the updated post body content\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/posts/{{postId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"posts",
+										"{{postId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Partially update post",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// 1. Ensure postId exists and is numeric\r",
+											"pm.test(\"postId is defined and numeric\", function() {\r",
+											"    const id = pm.variables.get(\"postId\");\r",
+											"    pm.expect(id, \"postId must be defined\").to.exist;\r",
+											"    pm.expect(id).to.match(/^\\d+$/);\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const res = pm.response;\r",
+											"let jsonData;\r",
+											"\r",
+											"try {\r",
+											"    jsonData = res.json();\r",
+											"} catch(e) {\r",
+											"    jsonData = null;\r",
+											"}\r",
+											"\r",
+											"// 1. Response is a JSON object\r",
+											"pm.test(\"Response is a JSON object\", function() {\r",
+											"    pm.expect(jsonData).to.be.an(\"object\");\r",
+											"});\r",
+											"\r",
+											"// 2. Response has expected fields (id should still be present)\r",
+											"pm.test(\"Patched post has id and title\", function() {\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    pm.expect(jsonData).to.have.property(\"title\");\r",
+											"});\r",
+											"\r",
+											"// 3. ID in response matches postId variable\r",
+											"pm.test(\"Response id matches postId\", function() {\r",
+											"    const expectedId = Number(pm.variables.get(\"postId\"));\r",
+											"    pm.expect(jsonData.id).to.eql(expectedId);\r",
+											"});\r",
+											"\r",
+											"// 4. Patched fields match what we sent\r",
+											"pm.test(\"Patched fields match sent data\", function(){\r",
+											"    const reqBodyRaw = pm.request.body.raw;\r",
+											"    let reqBody = {};\r",
+											"\r",
+											"    try {\r",
+											"        reqBody = JSON.parse(reqBodyRaw);\r",
+											"    } catch(e) {\r",
+											"        console.warn(\"Could not parse request body as JSON\", e);\r",
+											"    }\r",
+											"\r",
+											"    //Check that only title was sent\r",
+											"    if (reqBody.title !== undefined) {\r",
+											"        pm.expect(jsonData.title).to.eql(reqBody.title);\r",
+											"    }\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"title\": \"Partially updated title from Postman\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/posts/{{postId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"posts",
+										"{{postId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "DELETE - Delete post",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// 1. Ensure postId exists and is numeric\r",
+											"pm.test(\"postId is defined and numeric\", function () {\r",
+											"    const id = pm.variables.get(\"postId\");\r",
+											"    pm.expect(id, \"postId must be defined\").to.exist;\r",
+											"    pm.expect(id).to.match(/^\\d+$/);\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const res = pm.response;\r",
+											"let jsonData = null;\r",
+											"\r",
+											"try {\r",
+											"    jsonData = res.json();\r",
+											"} catch (e) {\r",
+											"    jsonData = null;\r",
+											"}\r",
+											"\r",
+											"// 1. Body is an empty object\r",
+											"pm.test(\"Response body is an empty object\", function() {\r",
+											"    pm.expect(jsonData).to.be.an(\"object\");\r",
+											"    pm.expect(Object.keys(jsonData).length).to.eql(0);\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{baseUrl}}/posts/{{postId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"posts",
+										"{{postId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "### **Positive-path checks**\n\n- Valid status codes (200, 201)\n    \n- JSON response structure\n    \n- Required fields: `userId`, `id`, `title`, `body`\n    \n- Correct echo behavior on POST/PUT/PATCH\n    \n- Basic performance (`responseTime < X ms`)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									"// FOLDER-LEVEL TESTS: Posts / 01 - Positive TESTS\r",
+									"const res = pm.response;\r",
+									"let jsonData = null;\r",
+									"\r",
+									"try {\r",
+									"    jsonData = res.json();\r",
+									"} catch(e) {\r",
+									"    jsonData = null;\r",
+									"}\r",
+									"\r",
+									"// 1. All happy-paths for posts section should return 2xx\r",
+									"pm.test(\"[FOLDER - POSITIVE] Status is 2xx\", function() {\r",
+									"    pm.expect(res.code).to.be.within(200, 299);\r",
+									"});\r",
+									"\r",
+									"// 2. If there is a body, it should be json\r",
+									"pm.test(\"[FOLDER - POSITIVE] Content-Type is JSON when body exists\", function() {\r",
+									"    const ct = res.headers.get(\"Content-Type\") || \"\";\r",
+									"    if (res.text() && res.text().length > 0) {\r",
+									"        pm.expect(ct.toLowerCase()).to.include(\"application/json\");\r",
+									"    } \r",
+									"})"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "02 - Negative Tests",
+					"item": [
+						{
+							"name": "GET - Post with invalid id (string)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const res = pm.response;\r",
+											"let jsonData = null;\r",
+											"\r",
+											"try {\r",
+											"    jsonData = res.json();\r",
+											"} catch(e) {\r",
+											"    jsonData = null;\r",
+											"}\r",
+											"\r",
+											"// 1. Body must be empty\r",
+											"pm.test(\"Response body is empty object\", function() {\r",
+											"    pm.expect(jsonData).to.be.an(\"object\");\r",
+											"pm.expect(Object.keys(jsonData).length).to.eql(0);\r",
+											"});\r",
+											"\r",
+											"// 3. Response must NOT contain post fields\r",
+											"pm.test(\"Response does not include post fields\", function(){\r",
+											"    const forbiddenFields = [\"id\", \"title\", \"body\", \"userId\"];\r",
+											"    forbiddenFields.forEach(field => {\r",
+											"        pm.expect(jsonData[field]).to.be.undefined;\r",
+											"    });\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// 1. todos - invalidID must exists\r",
+											"pm.test(\"'invalidID' is defined and numeric\", function() {\r",
+											"    const id = pm.variables.get(\"invalidID\");\r",
+											"    pm.expect(id, \"invalidID must exist\").to.exist;\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/posts/{{invalidID}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"posts",
+										"{{invalidID}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Create post with extra fields",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const res = pm.response;\r",
+											"let jsonData = {};\r",
+											"\r",
+											"try {\r",
+											"    jsonData = res.json();\r",
+											"} catch(e) {\r",
+											"    jsonData = null;\r",
+											"}\r",
+											"\r",
+											"// Considering that an API shouldn't accept extra unexpected fields, we should check for that.\r",
+											"// Failed tests - result in defects that should be logged\r",
+											"\r",
+											"// 1. MUST NOT return a created resource representation (no id, no full post object)\r",
+											"pm.test(\"No resource should be created when payload is invalid\", function() {\r",
+											"    if (!jsonData) return;\r",
+											"    pm.expect(jsonData.id, \"Error response must not include 'id'\").to.be.oneOf([undefined, null]);\r",
+											"    pm.expect(jsonData.title, \"Error response must not include 'title'\").to.be.oneOf([undefined, null]);\r",
+											"    pm.expect(jsonData.body, \"Error response must not include 'body'\").to.be.oneOf([undefined, null]);\r",
+											"    pm.expect(jsonData.userId, \"Error response must not include 'userId'\").to.be.oneOf([undefined, null]);\r",
+											"})\r",
+											"\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"title\": \"Valid title\",\r\n    \"body\": \"Valid body\",\r\n    \"userId\": 103,\r\n    \"extraField\": \"this_should_not_be_here\",\r\n    \"unexpectedNumber\": 999,\r\n    \"anotherObject\": {\r\n        \"nested\": true\r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/posts",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"posts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PUT - Incomplete body (missing body field)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const res = pm.response;\r",
+											"let jsonData = null;\r",
+											"\r",
+											"// Try to parse JSON Response\r",
+											"try {\r",
+											"    jsonData = res.json();\r",
+											"} catch(e) {\r",
+											"    jsonData = null;\r",
+											"}\r",
+											"\r",
+											"// 1. Error response must not look like a valid POST object\r",
+											"pm.test(\"Error response must not include POST resource fields\", function() {\r",
+											"    if (!jsonData) return;\r",
+											"\r",
+											"    pm.expect(jsonData.id, \"Error body must not include 'id' like a resource\")\r",
+											"    .to.be.oneOf([undefined, null]);\r",
+											"    pm.expect(jsonData.userId, \"Error body must not include 'userId' like a resource\")\r",
+											"    .to.be.oneOf([undefined, null]);\r",
+											"    pm.expect(jsonData.title, \"Error body must not include 'title' like a resource\")\r",
+											"    .to.be.oneOf([undefined, null]);\r",
+											"    pm.expect(jsonData.body, \"Error body must not include 'body' like a resource\")\r",
+											"    .to.be.oneOf([undefined, null]);\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// 1. Ensure postId exists and is numeric\r",
+											"pm.test(\"postId variable is defined and numeric\", function() {\r",
+											"    const id = pm.variables.get(\"postId\");\r",
+											"    pm.expect(id).to.match(/^\\d+$/);\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"id\": 1,\r\n    \"userId\": 1,\r\n    \"title\": \"Title without body\"\r\n    // missing the \"body\" part of the structure\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/posts/{{postId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"posts",
+										"{{postId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "DELETE - Remove non-existing post",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const res = pm.response;\r",
+											"let jsonData = null;\r",
+											"\r",
+											"// Try to parse JSON response\r",
+											"try {\r",
+											"    jsonData = res.json();\r",
+											"} catch(e) {\r",
+											"    jsonData = null;\r",
+											"}\r",
+											"\r",
+											"\r",
+											"// 1. Error response MUST NOT look like a successful POST object\r",
+											"pm.test(\"Error response must not contain post resource fields\", function () {\r",
+											"    if (!jsonData) return;\r",
+											"\r",
+											"    pm.expect(jsonData.id, \"Error body must not include 'id' like a resource\")\r",
+											"    .to.be.oneOf([undefined, null]);\r",
+											"    pm.expect(jsonData.title, \"Error body must not include 'title' like a resource\")\r",
+											"      .to.be.oneOf([undefined, null]);\r",
+											"    pm.expect(jsonData.body, \"Error body must not include 'body' like a resource\")\r",
+											"      .to.be.oneOf([undefined, null]);\r",
+											"    pm.expect(jsonData.userId, \"Error body must not include 'userId' like a resource\")\r",
+											"      .to.be.oneOf([undefined, null]);\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// 1. Ensure outofrangeID exists and is numeric\r",
+											"pm.test(\"outofrangeID variable is defined and numeric\", function() {\r",
+											"    const id = pm.variables.get(\"outofrangeID\");\r",
+											"    pm.expect(id).to.match(/^\\d+$/);\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/posts/{{outofrangeID}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"posts",
+										"{{outofrangeID}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "### **Negative-path checks**\n\n- Invalid IDs\n    \n- Non-existing IDs\n    \n- Missing required fields on POST/PUT\n    \n- ID mismatches between URL and body\n    \n- Invalid data types (userId, title, body)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									"// FOLDER-LEVEL TESTS: Posts / 02 - Negative TESTS\r",
+									"const res = pm.response;\r",
+									"\r",
+									"// 2. Negative tests should normally be 4xx\r",
+									"pm.test(\"[NEGATIVE TESTS] Status is 4xx (client error)\", function() {\r",
+									"    pm.expect(res.code).to.be.within(400, 499);\r",
+									"});\r",
+									"\r",
+									"// 3. Shouldn't return any kind of 2xx response\r",
+									"pm.test(\"[NEGATIVE TESTS] Does NOT return success status (2xx)\", function() {\r",
+									"    pm.expect(res.code).to.not.be.within(200, 299);\r",
+									"});\r",
+									"\r",
+									"// 4. Content-Type should still be JSON \r",
+									"pm.test(\"[NEGATIVE TESTS] Content-Type is still JSON\", function(){\r",
+									"    const ct = res.headers.get(\"Content-Type\");\r",
+									"    if (ct) pm.expect(ct).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									""
+								]
+							}
+						}
+					]
+				}
+			],
+			"description": "**This folder contains API tests for the** **`/posts`** **resource of the JSONPlaceholder API.**\n\n- It includes a full suite a suite of **positive CRUD tests** and **negative scenarios** designed to validate several endpoints\n    \n\n### **What this folder tests**\n\n- Retrieval of posts (single or list)\n    \n- Creation of posts (`POST`)\n    \n- Full update of posts (`PUT`)\n    \n- Partial update of posts (`PATCH`)\n    \n- Deletion of posts (`DELETE`)\n    \n\n### **Goal of this folder**\n\nProvide a structured API test suite that separates:\n\n- Functional verification\n    \n- Negative validation\n    \n- Structural consistency\n    \n\n### **Future improvements:**\n\n- Adding JSON Schema verification for endpoints"
+		},
+		{
+			"name": "Todos",
+			"item": [
+				{
+					"name": "01 - Positive Tests",
+					"item": [
+						{
+							"name": "GET - Todos filtered by userId",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// 2. userId must be defined and numeric\r",
+											"pm.test(\"userId is defined and numeric\", function() {\r",
+											"    const userId = pm.variables.get(\"userId\");\r",
+											"    pm.expect(userId, \"userId must be set\").to.exist;\r",
+											"    pm.expect(userId.toString(), \"userId must contain only digits\").to.match(/^\\d+$/);  \r",
+											"});\r",
+											"\r",
+											"// 3. Query must contain completed=true\r",
+											"pm.test(\"Query contains completed=true\", function() {\r",
+											"    const queryParams = pm.request.url.query.toObject();\r",
+											"    pm.expect(queryParams).to.have.property(\"completed\");\r",
+											"    pm.expect(queryParams.completed).to.eql(\"true\");\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const res = pm.response;\r",
+											"let data;\r",
+											"\r",
+											"//Try to parse JSON\r",
+											"try {\r",
+											"    data = res.json();\r",
+											"} catch(e) {\r",
+											"    data = null;\r",
+											"}\r",
+											"\r",
+											"const requestedUserId = Number(pm.variables.get(\"userId\"));\r",
+											"\r",
+											"// 4. Body is a JSON array\r",
+											"pm.test(\"Response body contains an array of objects\", function() {\r",
+											"    pm.expect(data, \"Response body must be an array of objects\").to.be.an(\"array\");\r",
+											"});\r",
+											"\r",
+											"// 5. Response should not be empty for a known existing userId + completed=true\r",
+											"pm.test(\"Response is not empty for existing userId with completed=true\", function() {\r",
+											"    data.forEach((todo, index) => {\r",
+											"        pm.expect(todo.userId, \"Wrong userId at index ${index}\").to.eql(requestedUserId);\r",
+											"    });\r",
+											"});\r",
+											"\r",
+											"// 6. Every todo must belong to the requested userId\r",
+											"pm.test(\"All todos belong to the requested userId\", function() {\r",
+											"    data.forEach((todo, index) => {\r",
+											"        pm.expect(todo.userId, \"Wrong userId at ${index}\").to.eql(requestedUserId);\r",
+											"    });\r",
+											"});\r",
+											"\r",
+											"// 7. Every todo must have completed === true\r",
+											"pm.test(\"All todos are completed (completed === true)\", function() {\r",
+											"    data.forEach((todo, index) => {\r",
+											"        pm.expect(todo, \"Todo at index ${index} must have 'completed'\").to.have.property(\"completed\");\r",
+											"        pm.expect(todo.completed, \"Todo at index ${index} should be true\").to.eql(true);\r",
+											"    });\r",
+											"});\r",
+											"\r",
+											"// 8. Each todo has required fields\r",
+											"pm.test(\"Each todo has required fields\", function() {\r",
+											"    data.forEach((todo, index) => {\r",
+											"        pm.expect(todo, \"Todo at index ${index} must be an object\").to.be.an(\"object\");\r",
+											"        pm.expect(todo).to.have.property(\"userId\");\r",
+											"        pm.expect(todo).to.have.property(\"id\");\r",
+											"        pm.expect(todo).to.have.property(\"title\");\r",
+											"        pm.expect(todo).to.have.property(\"completed\");\r",
+											"    });\r",
+											"});\r",
+											"\r",
+											"// 9. Basic type checks (spot check on first todo)\r",
+											"pm.test(\"First todo has correct field types\", function() {\r",
+											"    if (data.length === 0) {\r",
+											"        pm.skip(\"No todos returned, skipping type checks\");\r",
+											"    } else {\r",
+											"        const t = data[0];\r",
+											"        pm.expect(t.userId).to.be.a(\"number\");\r",
+											"        pm.expect(t.id).to.be.a(\"number\");\r",
+											"        pm.expect(t.title).to.be.a(\"string\");\r",
+											"        pm.expect(t.completed).to.be.a(\"boolean\");\r",
+											"    }\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/todos?userId={{userId}}&completed=true",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"todos"
+									],
+									"query": [
+										{
+											"key": "userId",
+											"value": "{{userId}}"
+										},
+										{
+											"key": "completed",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Create todo",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// 1. userId must be defined and numeric (if used in body)\r",
+											"pm.test(\"userId is defined and numeric\", function() {\r",
+											"    const userId = pm.variables.get(\"userId\");\r",
+											"    pm.expect(userId, \"userId must be set\").to.exist;\r",
+											"    pm.expect(userId.toString(), \"userId must contain only digits\").to.match(/^\\d+$/);\r",
+											"});\r",
+											"\r",
+											"// 2. Validate request body is valid JSON and has required fields\r",
+											"pm.test(\"Request body is valid JSON with required fields\", function() {\r",
+											"    const raw = pm.request.body.raw;\r",
+											"    let body;\r",
+											"    try {\r",
+											"        body = JSON.parse(raw);\r",
+											"    } catch (e) {\r",
+											"        pm.expect.fail(\"Request body is not valid JSON\")\r",
+											"    }\r",
+											"\r",
+											"    pm.expect(body).to.be.an(\"object\");\r",
+											"    pm.expect(body).to.have.property(\"userId\");\r",
+											"    pm.expect(body).to.have.property(\"title\");\r",
+											"    pm.expect(body).to.have.property(\"completed\");\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const res = pm.response;\r",
+											"let jsonData;\r",
+											"let reqBody = {};\r",
+											"\r",
+											"try {\r",
+											"    jsonData = res.json();\r",
+											"} catch(e) {\r",
+											"    jsonData = null;\r",
+											"}\r",
+											"\r",
+											"// Parse request body - used for test #3\r",
+											"try {\r",
+											"    reqBody = JSON.parse(pm.request.body.raw);\r",
+											"} catch(e) {\r",
+											"    reqBody = {};\r",
+											"}\r",
+											"\r",
+											"// 1. Response is a valid object\r",
+											"pm.test(\"Response is a JSON object\", function() {\r",
+											"    pm.expect(jsonData).to.be.an(\"object\");\r",
+											"});\r",
+											"\r",
+											"// 2. Response has required todo fields\r",
+											"pm.test(\"Response has required todo fields\", function() {\r",
+											"    pm.expect(jsonData).to.have.property(\"userId\");\r",
+											"    pm.expect(jsonData).to.have.property(\"id\");\r",
+											"    pm.expect(jsonData).to.have.property(\"title\");\r",
+											"    pm.expect(jsonData).to.have.property(\"completed\");\r",
+											"})\r",
+											"\r",
+											"// 3. Response echoes the sent data (userId, title, completed)\r",
+											"pm.test(\"Response body matches sent data (userId/title/completed)\", function() {\r",
+											"    pm.expect(jsonData.userId).to.equal(reqBody.userId);\r",
+											"    pm.expect(jsonData.title).to.eql(reqBody.title);\r",
+											"    pm.expect(jsonData.completed).to.equal(reqBody.completed);\r",
+											"});\r",
+											"\r",
+											"// 4. id is generated and numeric\r",
+											"pm.test(\"Response contains generated numeric id\", function() {\r",
+											"    pm.expect(jsonData.id).to.be.a(\"number\");\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"userId\": \"{{userId}}\",\r\n    \"title\": \"New todo from Postman\",\r\n    \"completed\": false\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/todos",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"todos"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH - Partially update todo",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// 1. userId must exist and be numeric\r",
+											"pm.test(\"userId is defined and numeric\", function() {\r",
+											"    const id = pm.variables.get(\"userId\");\r",
+											"    pm.expect(id, \"userId must exist\").to.exist;\r",
+											"    pm.expect(id.toString()).to.match(/^\\d+$/);\r",
+											"});\r",
+											"\r",
+											"// 2. Request body must be valid JSON (and partial)\r",
+											"pm.test(\"Request body is valid JSON\", function() {\r",
+											"    const rawResolved = pm.request.body.raw\r",
+											"\r",
+											"    let body;\r",
+											"    try {\r",
+											"        body = JSON.parse(rawResolved);\r",
+											"    } catch(e) {\r",
+											"        pm.expect.fail(\"Request body is not valid JSON\");\r",
+											"    }\r",
+											"\r",
+											"    pm.expect(body).to.be.an(\"object\");\r",
+											"    pm.expect(Object.keys(body).length, \"PATCH body must contain at least one field\").to.be.above(0);\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const res = pm.response;\r",
+											"let jsonData = null;\r",
+											"let reqBody = {};\r",
+											"\r",
+											"// Parse response\r",
+											"try {\r",
+											"    jsonData = res.json();\r",
+											"} catch(e) {\r",
+											"    jsonData = null;\r",
+											"}\r",
+											"\r",
+											"// 1. Response is a valid object\r",
+											"pm.test(\"Response is a JSON object\", function() {\r",
+											"    pm.expect(jsonData).to.be.an(\"object\");\r",
+											"});\r",
+											"\r",
+											"// 2. Response must include id (same as requested)\r",
+											"pm.test(\"Response includes correct todo id\", function() {\r",
+											"    const expectedId = Number(pm.variables.get(\"userId\"));\r",
+											"    pm.expect(jsonData.id).to.eql(expectedId);\r",
+											"});\r",
+											"\r",
+											"// 3. Response must still contain unchanged fields (JSONPlaceholder echoes body)\r",
+											"pm.test(\"Response still contains other todo fields\", function () {\r",
+											"    pm.expect(jsonData).to.have.property(\"userId\");\r",
+											"    pm.expect(jsonData).to.have.property(\"title\");\r",
+											"    pm.expect(jsonData).to.have.property(\"completed\");\r",
+											"});\r",
+											"\r",
+											"// 4. Basic type checks for important fields\r",
+											"pm.test(\"Important fields have correct types\", function () {\r",
+											"    pm.expect(jsonData.userId).to.be.a(\"number\");\r",
+											"    pm.expect(jsonData.id).to.be.a(\"number\");\r",
+											"    pm.expect(jsonData.title).to.be.a(\"string\");\r",
+											"    pm.expect(jsonData.completed).to.be.a(\"boolean\");\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"title\": \"Updated todo title (PATCH)\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/todos/{{userId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"todos",
+										"{{userId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "DELETE - Delete todo",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// 2. userId must exist and be numeric\r",
+											"pm.test(\"userId is defined and numeric\", function() {\r",
+											"    const id = pm.variables.get(\"userId\");\r",
+											"    pm.expect(id, \"userId must exist\").to.exist;\r",
+											"    pm.expect(id.toString(), \"createdTodoId must be digits only\").to.match(/^\\d+$/);\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const res = pm.response;\r",
+											"let jsonData = null;\r",
+											"\r",
+											"try {\r",
+											"    jsonData = res.json();\r",
+											"} catch(e) {\r",
+											"    jsonData = null;\r",
+											"}\r",
+											"// 1. JSONPlaceHolder returns {} after deleting\r",
+											"pm.test(\"Response body is empty object - JSONPlaceHolder behavior\", function() {\r",
+											"    pm.expect(jsonData).to.satisfy(value => value === null || JSON.stringify(value) === \"{}\");\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/todos/{{userId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"todos",
+										"{{userId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "### **Positive-path checks**\n\n- Correct status codes (200, 201)\n    \n- JSON structure for todos\n    \n- Required fields:\n    \n    - `userId` (number)\n        \n    - `id` (number)\n        \n    - `title` (string)\n        \n    - `completed` (boolean)\n        \n- Correct filtering behavior (every todo matches `userId` and/or `completed=true`)\n    \n- Validate response structure and basic performance",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									"// FOLDER-LEVEL TESTS: Todos / 01 - Positive TESTS\r",
+									"\r",
+									"const res = pm.response;\r",
+									"let jsonData = null;\r",
+									"\r",
+									"try {\r",
+									"    jsonData = res.json();\r",
+									"} catch(e) {\r",
+									"    jsonData = null;\r",
+									"}\r",
+									"\r",
+									"// 1. All happy-paths for posts section should return 2xx\r",
+									"pm.test(\"[FOLDER - POSITIVE] Status is 2xx\", function() {\r",
+									"    pm.expect(res.code).to.be.within(200, 299);\r",
+									"});\r",
+									"\r",
+									"// 2. If there is a body, it should be json\r",
+									"pm.test(\"[FOLDER - POSITIVE] Content-Type is JSON when body exists\", function() {\r",
+									"    const ct = res.headers.get(\"Content-Type\") || \"\";\r",
+									"    if (res.text() && res.text().length > 0) {\r",
+									"        pm.expect(ct.toLowerCase()).to.include(\"application/json\");\r",
+									"    } \r",
+									"})"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "02 - Negative Tests",
+					"item": [
+						{
+							"name": "GET - Todo with invalid id (abc)",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// 1. todos - invalidID must exist\r",
+											"pm.test(\"'invalidID' is defined and numeric\", function() {\r",
+											"    const id = pm.variables.get(\"invalidID\");\r",
+											"    pm.expect(id, \"invalidID must exist\").to.exist;\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const res = pm.response;\r",
+											"let jsonData = null;\r",
+											"\r",
+											"try {\r",
+											"    jsonData = res.json();\r",
+											"} catch(e) {\r",
+											"    jsonData = null;\r",
+											"}\r",
+											"\r",
+											"// 1. Response body must be empty (should not return any todo)\r",
+											"pm.test(\"Response body is empty object\", function(){\r",
+											"    pm.expect(jsonData).to.be.an(\"object\");\r",
+											"    pm.expect(Object.keys(jsonData).length).to.eql(0);\r",
+											"});\r",
+											"\r",
+											"// 2. Response must NOT contain todo fields\r",
+											"pm.test(\"Response does not include todo fields\", function() {\r",
+											"    const forbiddenFields = [\"id\", \"title\", \"completed\", \"userId\"];\r",
+											"    forbiddenFields.forEach(field => {\r",
+											"        pm.expect(jsonData[field]).to.be.undefined;\r",
+											"    });\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/todos/{{invalidID}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"todos",
+										"{{invalidID}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST - Missing required fields",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// 1. Required fields are missing\r",
+											"pm.test(\"Required fields are missing\", function() {\r",
+											"    const body = JSON.parse(pm.variables.replaceIn(pm.request.body.raw));\r",
+											"    pm.expect(body.userId, \"userId should be missing in negative test\").to.be.undefined;\r",
+											"    pm.expect(body.completed, \"completed should be missing in negative test\").to.be.undefined;\r",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const res = pm.response;\r",
+											"let jsonData = null;\r",
+											"\r",
+											"try {\r",
+											"    jsonData = res.json();\r",
+											"} catch(e) {\r",
+											"    jsonData = null;\r",
+											"}\r",
+											"\r",
+											"// 1. No resource should be created + body should not contain todo fields\r",
+											"pm.test(\"Response body is empty or error object\", function() {\r",
+											"    pm.expect(jsonData).to.be.an(\"object\");\r",
+											"    pm.expect(Object.keys(jsonData).length <= 3).to.be.true;\r",
+											"});\r",
+											"\r",
+											"// 2. Repsonse must NOT include todo fields\r",
+											"pm.test(\"Response does not include todo fields\", function() {\r",
+											"    const forbiddenFields = [\"id\", \"title\", \"completed\", \"userId\"];\r",
+											"    forbiddenFields.forEach(field => {\r",
+											"        pm.expect(jsonData[field]).to.be.undefined;\r",
+											"    });\r",
+											"});\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"title\":\"Todo with missing fields\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/todos",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"todos"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "### **Negative-path checks**\n\n- Invalid IDs (e.g., `/todos/abc`)\n    \n- Missing required fields on POST\n    \n- Invalid data types\n    \n- Empty PATCH body\n    \n- DELETE with invalid or non-existing IDs\n    \n- Invalid query parameters (`completed=maybe`)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									"// FOLDER-LEVEL TESTS: Todos / 02 - Negative TESTS\r",
+									"const res = pm.response;\r",
+									"\r",
+									"// 2. Negative tests should normally be 4xx\r",
+									"pm.test(\"[NEGATIVE TESTS] Status is 4xx (client error)\", function() {\r",
+									"    pm.expect(res.code).to.be.within(400, 499);\r",
+									"});\r",
+									"\r",
+									"// 3. Shouldn't return any kind of 2xx response\r",
+									"pm.test(\"[NEGATIVE TESTS] Does NOT return success status (2xx)\", function() {\r",
+									"    pm.expect(res.code).to.not.be.within(200, 299);\r",
+									"});\r",
+									"\r",
+									"// 4. Content-Type should still be JSON \r",
+									"pm.test(\"[NEGATIVE TESTS] Content-Type is still JSON\", function(){\r",
+									"    const ct = res.headers.get(\"Content-Type\");\r",
+									"    if (ct) pm.expect(ct).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									""
+								]
+							}
+						}
+					]
+				}
+			],
+			"description": "**This folder contains API tests for the** **`/todos`** **resource of the JSONPlaceholder API.**\n\n- It includes a full suite a suite of **positive CRUD tests** and **negative scenarios** designed to validate several endpoints\n    \n\n### **What this folder tests**\n\n- Retrieval of todos (single and filtered)\n    \n- Creation of todos (`POST`)\n    \n- Partial updates (`PATCH`)\n    \n- Deletion (`DELETE`)\n    \n- Filtering logic using query parameters (`userId`, `completed=true`)\n    \n- Business rules for required fields and data types\n    \n\n### **Goal of this folder**\n\nProvide a clean framework for:\n\n- CRUD coverage\n    \n- Filtering validation\n    \n- Edge-case handling\n    \n\n### **Future improvements:**\n\n- Adding JSON Schema verification for endpoints",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					"// COLLECTION-LEVEL PRE-REQUEST SCRIPT\r",
+					"// 1. baseUrl must exist and be defined\r",
+					"pm.test(\"[COLLECTION] baseUrl is defined and valid\", function() {\r",
+					"    const baseUrl = pm.variables.get(\"baseUrl\");\r",
+					"    pm.expect(baseUrl, \"baseUrl must be defined at collection/env level\").to.be.a(\"string\").and.not.empty;\r",
+					"});\r",
+					"\r",
+					"// 2.  Validate URL format before sending the request\r",
+					"pm.test(\"[COLLECTION] Constructed URL is valid\", function() {\r",
+					"    const resolvedUrl = pm.request.url.toString(true);\r",
+					"    console.log(\"Resolved URL:\", resolvedUrl);\r",
+					"    pm.expect(resolvedUrl, \"Resolved URL should start with http(s)://\").to.match(/^https?:\\/\\/.+/);\r",
+					"});\r",
+					"\r",
+					"// 3. Pre-request guards - prevent sending request if variable is invalid\r",
+					"if (!pm.variables.get(\"baseUrl\")) {\r",
+					"    throw new Error(\"Cannot run: baseUrl variable is missing.\")\r",
+					"}\r",
+					"\r",
+					"// 4. Log basic debug info once per request\r",
+					"console.log(\"Env: \", pm.environment.name || \"No environment\");\r",
+					"console.log(\"baseUrl\", pm.variables.get(\"baseUrl\"));\r",
+					"console.log(\"Request:\", pm.request.method, pm.request.url.toString());\r",
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					"// COLLECTION-LEVEL TESTS\r",
+					"const res = pm.response;\r",
+					"\r",
+					"// 1. Server should never crash (5xx)\r",
+					"pm.test(\"[COLLECTION] Status is not 5xx\", function() {\r",
+					"    pm.expect(res.code, \"No server error expected\").to.not.be.within(500, 599);\r",
+					"});\r",
+					"\r",
+					"// 3. Basic performance test - runtime\r",
+					"pm.test(\"[COLLECTION] Response time < 1000ms\", function() {\r",
+					"    pm.expect(res.responseTime, \"Response too slow\").to.be.below(800);\r",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://jsonplaceholder.typicode.com"
+		},
+		{
+			"key": "postId",
+			"value": "5"
+		},
+		{
+			"key": "userId",
+			"value": "10"
+		},
+		{
+			"key": "invalidID",
+			"value": "abc"
+		},
+		{
+			"key": "outofrangeID",
+			"value": "999999"
+		}
+	]
+}
