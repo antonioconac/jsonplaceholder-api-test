@@ -22,8 +22,6 @@
 │ └── postman-newman-ci.yml<br>
 └── README.md<br>
 
-## Collection Structure
-
 ## Running Tests Locally
 - Make sure you have **Node.js** installed, then install **Newman**:
 - (bash) **npm install -g newman newman-reporter-htmlextra**
