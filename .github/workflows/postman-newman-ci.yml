@@ -3,7 +3,7 @@ name: Postman Newman CI
 on:
     push:
         branches: ["main"]
-    pull_requests:
+    pull_request:
         branches: ["main"]
 
 jobs:
@@ -12,26 +12,24 @@ jobs:
         
         steps:
             - name: Checkout repository
-            uses: actions/checkout@v4
+              uses: actions/checkout@v4
             
             - name: Setup Node.js
-            uses: actions/setup-node@v4
-            with:
-                node-version: '20'
+              uses: actions/setup-node@v4
+              with:
+                   node-version: '20'
                 
             - name: Install Newman
-            run: |
-                npm install -g newman newman-reporter-htmlextra
+              run: |
+                   npm install -g newman newman-reporter-htmlextra
                 
             - name: Run Postman tests with Newman
-            run: |
-                newman run collections/jsonplaceholder.postman_collection.json \ 
-                -r cli, htmlextra \
-                --reporter-htmlextra-export newman-report.htmlextra
+              run: |
+                   newman run "collections/JSONPlaceholder API Tests.postman_collection.json" -r cli,htmlextra --reporter-htmlextra-export newman-report.html
             
             - name: Upload Newman HTML report
-            if: always()
-            uses: actions/upload-artifact@v4
-            with:
-                name: newman-report
-                path: newman-report.html
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                   name: newman-report
+                   path: newman-report.html
