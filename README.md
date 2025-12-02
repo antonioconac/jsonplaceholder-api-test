@@ -13,6 +13,10 @@
 
 ## Defect reports
 **While working on this project, based on how tests were written against a real-world API behavior, I found the following defects and I created defect reports for each one of them, using the structure learned while preparing for the ISTQB CTFL Exam:**
+- https://github.com/antonioconac/jsonplaceholder-api-test/issues/1 - POST /posts creates a resource even when the request body is missing required fields<br>
+- https://github.com/antonioconac/jsonplaceholder-api-test/issues/2 - DELETE /posts/{id} returns 200 OK for non-existent resource (out-of-range ID)<br>
+- https://github.com/antonioconac/jsonplaceholder-api-test/issues/3 - PUT /posts/{postId} updates resource even when request body is incomplete<br>
+- https://github.com/antonioconac/jsonplaceholder-api-test/issues/4 - POST /posts creates a resource even when the request body contains invalid/extra fields<br>
 
 ## Project Structure
 ├── collections/<br>
